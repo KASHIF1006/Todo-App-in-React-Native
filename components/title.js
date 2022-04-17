@@ -9,7 +9,6 @@ function TitleDescription({ navigation }) {
 
     const readDataHandler = async () => {
         try {
-            console.log(title,desc)
             await AsyncStorage.setItem(title.toString(), desc.toString())
             navigation.goBack();
         } catch (err) {

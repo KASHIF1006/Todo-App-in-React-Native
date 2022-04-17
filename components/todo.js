@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import { StyleSheet, TouchableOpacity , Text, View, ScrollView} from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import { IconButton, TextInput, Checkbox } from 'react-native-paper';
+import { IconButton, TextInput } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 function Todo({ navigation }) {
   const isFocused = useIsFocused();
   const [taskItems, setTasks] = useState([]);
-  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (isFocused)
@@ -20,27 +20,11 @@ function Todo({ navigation }) {
     const keys = await AsyncStorage.getAllKeys();
     await AsyncStorage.multiGet(keys).then((data) => {
       setTasks(data);
-      console.log(data);
     }).catch((error) => {
       console.log(error);
     });
   }
 
-  const searchResults = (searchQuery) => {
-    const searchedList = []
-    const addedItem = []
-    taskItems.map((item, index) => {
-      if (item[0].includes(searchQuery) && !addedItem.includes(item[0])) {
-        console.log(addedItem)
-        console.log(item[0])
-        addedItem.push(item[0])
-        searchedList.push(<TouchableOpacity key={index} onPress={() => JSON.parse(item[1])['isComplete'] ? null : navigation.navigate('CompleteTask', { title: item[0], desc: JSON.parse(item[1])['desc'], isComplete: JSON.parse(item[1])['isComplete'] })}>
-          <Task title={item[0]} desc={JSON.parse(item[1])['desc']} isComplete={JSON.parse(item[1])['isComplete']} />
-        </TouchableOpacity>)
-      }
-    })
-    return searchedList;
-  }
 
   const Task = (props) => {
     const deleteTask = async (title) => {
@@ -57,7 +41,7 @@ function Todo({ navigation }) {
       <View style={styles.item}>
         <View style={styles.itemLeft}>
           <View style={styles.square}></View>
-          <View >
+          <View style={styles.centerView}>
             <Text style={styles.itemTitle}>{props.title}</Text>
             <View><Text style={styles.itemDesc}>{props.desc}</Text></View>
           </View>
@@ -72,6 +56,20 @@ function Todo({ navigation }) {
       </View>
     );
   }
+
+  const searchResults = (searchQuery) => {
+    let searchList = []
+    taskItems.map((item, index) => {
+      if(item[0].includes(searchQuery)) {
+        searchList.push(
+          <TouchableOpacity key={index}>
+            <Task title={item[0]} desc={item[1]} />
+          </TouchableOpacity>
+        )
+      }
+    })
+    return searchList;
+  } 
     return (
       <View style={styles.body}>
         <View style={styles.taskContent}>
@@ -85,24 +83,16 @@ function Todo({ navigation }) {
         <View style={styles.taskContent}>
           <ScrollView>
           {
-            taskItems.map((item, index) => {
-
-              return <TouchableOpacity key={index} onPress={() => {navigation.navigate('Completed Task',{ title: item[0], desc: item[1] })}}>
-                <Task key={index} title={item[0]} desc={item[1]} />
-              </TouchableOpacity>
+            searchQuery.length < 1 ?
+              taskItems.map((item, index) => {
+                return <TouchableOpacity key={index}>
+                  <Task key={index} title={item[0]} desc={item[1]} />
+                </TouchableOpacity>
             })
+            : searchResults(searchQuery)
           }
         </ScrollView> 
-        {/* <ScrollView style={styles.task} contentContainerStyle={{ padding: 20 }}>
-        {
-
-          taskItems.map((item, index) => {
-            return searchQuery.length < 1 ? <TouchableOpacity key={index} onPress={() => JSON.parse(item[1])['isComplete'] ? null : navigation.navigate('CompleteTask', { title: item[0], desc: JSON.parse(item[1])['desc'], isComplete: JSON.parse(item[1])['isComplete'] })}>
-              <Task title={item[0]} desc={JSON.parse(item[1])['desc']} isComplete={JSON.parse(item[1])['isComplete']} />
-            </TouchableOpacity> : searchResults(searchQuery)
-          })
-        }
-      </ScrollView> */}
+        
         </View>
         <TouchableOpacity
           style={styles.button}
@@ -160,6 +150,9 @@ const styles = StyleSheet.create({
       opacity: 0.4,
       borderRadius: 5,
       marginRight: 15,
+    },
+    centerView: {
+      width: '70%'
     },
     itemDesc: {
       fontSize: 12,
